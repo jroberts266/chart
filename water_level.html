@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Water Level Graph</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <h1>Water Level Graph</h1>
+  <canvas id="graph"></canvas>
+
+  <script>
+    // Function to fetch data from the USGS API
+    async function fetchData() {
+      const siteCode = '03294000'; // USGS site code
+      const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${siteCode}&parameterCd=00065`; // USGS API endpoint
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const timeSeries = data.value.timeSeries[0]; // Retrieve the first time series
+
+        // Extract timestamps and water levels from the time series data
+        const timestamps = timeSeries.values[0].value.map((item) => new Date(item.dateTime));
+        const waterLevels = timeSeries.values[0].value.map((item) => parseFloat(item.value));
+
+        // Create the graph using a charting library (e.g., Chart.js)
+        createGraph(timestamps, waterLevels);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+
+    // Function to create a time series graph using Chart.js
+    function createGraph(timestamps, waterLevels) {
+      const ctx = document.getElementById('graph').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: timestamps,
+          datasets: [
+            {
+              label: 'Water Level',
+              data: waterLevels,
+              borderColor: 'blue',
+              fill: false,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              type: 'time',
+              time: {
+                unit: 'day',
+              },
+              display: true,
+              scaleLabel: {
+                display: true,
+                labelString: 'Timestamp',
+              },
+            },
+            y: {
+              display: true,
+              scaleLabel: {
+                display: true,
+                labelString: 'Water Level',
+              },
+            },
+          },
+        },
+      });
+    }
+
+    // Call the fetchData function to initiate the data retrieval and graph creation
+    fetchData();
+  </script>
+</body>
+
+</html>
